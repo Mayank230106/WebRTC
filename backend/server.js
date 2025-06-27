@@ -31,6 +31,9 @@ io.on("connection", socket => {
   const userName = socket.handshake.auth.userName;
   const password = socket.handshake.auth.password;
 
+  console.log("Client connected:", userName);
+
+
   if (password !== "x") {
     socket.disconnect(true);
     return;
@@ -38,9 +41,8 @@ io.on("connection", socket => {
 
   connectedSockets.push({ socketId: socket.id, userName });
 
-  if (offers.length) {
-    socket.emit("availableOffers", offers);
-  }
+  socket.emit("availableOffers", offers);
+
 
   socket.on("newOffer", offer => {
     offers.push({
@@ -51,7 +53,10 @@ io.on("connection", socket => {
       answer: null,
       answererIceCandidates: []
     });
-    socket.broadcast.emit("newOfferAwaiting", offers.slice(-1));
+    console.log("New offer received from", userName);
+    console.log("Broadcasting offers:", offers);
+
+    io.emit("availableOffers", offers);
   });
 
   socket.on("newAnswer", (offerObj, ack) => {

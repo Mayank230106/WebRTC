@@ -10,12 +10,12 @@ export default defineConfig({
         target: 'https://localhost:8181',
         ws: true,
         changeOrigin: true,
-        secure: true
+        secure: false
       },
       '/api': {
         target: 'https://localhost:8181',
         changeOrigin: true,
-        secure: true
+        secure: false
       }
     }
   }

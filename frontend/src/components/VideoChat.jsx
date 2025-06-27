@@ -13,6 +13,11 @@ export default function VideoChat() {
     socket.auth = { userName: userName.current, password: 'x' };
     socket.connect();
 
+    socket.on("connect", () => {
+    console.log("Connected to signaling server");
+    });
+
+
     socket.on('availableOffers', setOffers);
     socket.on('newOfferAwaiting', setOffers);
 
@@ -60,6 +65,8 @@ export default function VideoChat() {
   };
 
   const call = async () => {
+    console.log("Call button clicked");
+    
     const stream = await startStream();
     const pc = setupPeer(stream);
 
