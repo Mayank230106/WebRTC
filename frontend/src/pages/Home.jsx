@@ -1,9 +1,11 @@
+// src/pages/Home.js
 import React, { useState } from 'react';
 import {
   AppBar,
   Toolbar,
   Typography,
   Button,
+  IconButton,
   Card,
   CardContent,
   Grid,
@@ -13,14 +15,13 @@ import {
   ListItem,
   ListItemText,
   Divider,
-  Paper,
   CssBaseline,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   TextField,
-  IconButton
+  Paper
 } from '@mui/material';
 import {
   Videocam as VideocamIcon,
@@ -28,26 +29,23 @@ import {
   Group as GroupIcon,
   Settings as SettingsIcon,
   ArrowForward as ArrowForwardIcon,
-  Close as CloseIcon
+  Close as CloseIcon,
+  Person as PersonIcon
 } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
+// Carousel library
+import Slider from 'react-slick';
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
+
 // Enhanced modern theme
 const theme = createTheme({
   palette: {
-    primary: {
-      main: '#00695c',  // teal shade
-      contrastText: '#fff'
-    },
-    secondary: {
-      main: '#ffb300',  // amber shade
-      contrastText: '#000'
-    },
-    background: {
-      default: '#f5f5f5',
-      paper: '#fff'
-    }
+    primary: { main: '#00695c', contrastText: '#fff' },
+    secondary: { main: '#ffb300', contrastText: '#000' },
+    background: { default: '#f5f5f5', paper: '#fff' }
   },
   typography: {
     fontFamily: ['Inter','Roboto','sans-serif'].join(','),
@@ -57,16 +55,8 @@ const theme = createTheme({
     button: { textTransform: 'none', fontWeight: 600 }
   },
   components: {
-    MuiButton: {
-      styleOverrides: {
-        root: { borderRadius: 12 }
-      }
-    },
-    MuiAppBar: {
-      styleOverrides: {
-        root: { boxShadow: 'none' }
-      }
-    }
+    MuiButton: { styleOverrides: { root: { borderRadius: 12 } } },
+    MuiAppBar:  { styleOverrides: { root: { boxShadow: 'none' } } }
   }
 });
 
@@ -87,24 +77,13 @@ function JoinMeetingDialog({ open, onClose, onJoin }) {
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={handleClose}
-      fullWidth
-      maxWidth="xs"
-      aria-labelledby="join-meeting-dialog"
-    >
+    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs" aria-labelledby="join-meeting-dialog">
       <DialogTitle id="join-meeting-dialog" sx={{ pr: 4, position: 'relative' }}>
         Enter Meeting Code
         <IconButton
           aria-label="close"
           onClick={handleClose}
-          sx={{
-            position: 'absolute',
-            right: 8,
-            top: 8,
-            color: 'grey.500'
-          }}
+          sx={{ position: 'absolute', right: 8, top: 8, color: 'grey.500' }}
         >
           <CloseIcon />
         </IconButton>
@@ -126,15 +105,8 @@ function JoinMeetingDialog({ open, onClose, onJoin }) {
       </DialogContent>
 
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={handleClose} variant="text">
-          Cancel
-        </Button>
-        <Button
-          onClick={handleJoin}
-          variant="contained"
-          color="secondary"
-          disabled={!code.trim()}
-        >
+        <Button onClick={handleClose} variant="text">Cancel</Button>
+        <Button onClick={handleJoin} variant="contained" color="secondary" disabled={!code.trim()}>
           Join
         </Button>
       </DialogActions>
@@ -142,23 +114,51 @@ function JoinMeetingDialog({ open, onClose, onJoin }) {
   );
 }
 
-// Home component with integrated dialog
 export const Home = () => {
   const [joinOpen, setJoinOpen] = useState(false);
 
   const handleOpenJoin = () => setJoinOpen(true);
   const handleCloseJoin = () => setJoinOpen(false);
-  const handleJoinMeeting = (code) => {
-    // Replace with your actual join logic or navigation
+  const handleJoinMeeting = code => {
     console.log('Joining meeting with code:', code);
     // e.g. navigate(`/join/${code}`)
     setJoinOpen(false);
   };
 
+  // Hero carousel images
+  const carouselImages = [
+    'https://source.unsplash.com/random/800x420?conference',
+    'https://source.unsplash.com/random/800x420?meeting',
+    'https://source.unsplash.com/random/800x420?video-call'
+  ];
+  const sliderSettings = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    autoplay: true,
+    autoplaySpeed: 4000,
+    arrows: true
+  };
+
+  // Features data
   const features = [
-    { icon: <VideocamIcon fontSize="large" color="primary" />, title: 'HD Video Calls', description: 'Crystal clear video quality with noise cancellation' },
-    { icon: <GroupIcon fontSize="large" color="primary" />, title: 'Group Meetings', description: 'Host meetings with up to 50 participants' },
-    { icon: <SettingsIcon fontSize="large" color="primary" />, title: 'Easy Setup', description: 'No downloads required - works in any browser' }
+    {
+      icon: <VideocamIcon fontSize="large" color="primary" />,
+      title: 'HD Video Calls',
+      description: 'Crystal clear video quality with noise cancellation'
+    },
+    {
+      icon: <GroupIcon fontSize="large" color="primary" />,
+      title: 'Group Meetings',
+      description: 'Host meetings with up to 50 participants'
+    },
+    {
+      icon: <SettingsIcon fontSize="large" color="primary" />,
+      title: 'Easy Setup',
+      description: 'No downloads required – works in any browser'
+    }
   ];
 
   return (
@@ -177,9 +177,9 @@ export const Home = () => {
                 </Typography>
               </Box>
               <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, ml: 4 }}>
-                <Button color="inherit">Features</Button>
-                <Button color="inherit">Pricing</Button>
-                <Button color="inherit">About</Button>
+                <Button color="inherit" component={Link} to="/">Features</Button>
+                <Button color="inherit" component={Link} to="/pricing">Pricing</Button>
+                <Button color="inherit" component={Link} to="/about">About</Button>
               </Box>
               <Box>
                 <Button
@@ -201,12 +201,21 @@ export const Home = () => {
                 >
                   Get Started
                 </Button>
+                {/* Profile icon */}
+                <IconButton
+                  color="inherit"
+                  component={Link}
+                  to="/profile"
+                  sx={{ ml: 1 }}
+                >
+                  <PersonIcon />
+                </IconButton>
               </Box>
             </Toolbar>
           </Container>
         </AppBar>
 
-        {/* Hero Section */}
+        {/* Hero Section with Carousel */}
         <Box sx={{ bgcolor: 'background.default', py: 12, flexGrow: 1 }}>
           <Container maxWidth={false} disableGutters sx={{ px: { xs: 3, md: 8 } }}>
             <Grid container spacing={6} alignItems="center">
@@ -223,7 +232,7 @@ export const Home = () => {
                     color="primary"
                     size="large"
                     component={Link}
-                    to="/video" // ← updated path here
+                    to="/video"
                     endIcon={<ArrowForwardIcon />}
                   >
                     Start New Meeting
@@ -240,14 +249,17 @@ export const Home = () => {
                 </Box>
               </Grid>
               <Grid item xs={12} md={6}>
-                <Paper
-                  elevation={3}
-                  sx={{
-                    height: 420,
-                    borderRadius: 4,
-                    bgcolor: 'grey.100'
-                  }}
-                />
+                <Slider {...sliderSettings} style={{ borderRadius: 16, overflow: 'hidden' }}>
+                  {carouselImages.map((url, idx) => (
+                    <Box
+                      key={idx}
+                      component="img"
+                      src={url}
+                      alt={`slide-${idx}`}
+                      sx={{ width: '100%', height: 420, objectFit: 'cover' }}
+                    />
+                  ))}
+                </Slider>
               </Grid>
             </Grid>
           </Container>
@@ -313,7 +325,7 @@ export const Home = () => {
               <Grid item xs={12} md={4}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
                   <VideocamIcon color="secondary" fontSize="large" />
-                  <Typography variant="h6" color="inherit" sx={{ ml: 1 }}>
+                  <Typography variant="h6" sx={{ ml: 1 }}>
                     VideoConnect
                   </Typography>
                 </Box>
@@ -321,7 +333,7 @@ export const Home = () => {
                   Premium video conferencing solution for modern teams.
                 </Typography>
               </Grid>
-              {[
+              {[ 
                 { title: 'Product', items: ['Features','Pricing','Download'] },
                 { title: 'Company', items: ['About Us','Careers','Contact'] },
                 { title: 'Legal', items: ['Privacy Policy','Terms of Service','Security'] }
@@ -331,7 +343,7 @@ export const Home = () => {
                     {section.title}
                   </Typography>
                   <List dense>
-                    {section.items.map((item,j) => (
+                    {section.items.map((item, j) => (
                       <ListItem key={j} disableGutters>
                         <ListItemText primary={item} />
                       </ListItem>
@@ -348,11 +360,7 @@ export const Home = () => {
         </Box>
 
         {/* Join Meeting Dialog */}
-        <JoinMeetingDialog
-          open={joinOpen}
-          onClose={handleCloseJoin}
-          onJoin={handleJoinMeeting}
-        />
+        <JoinMeetingDialog open={joinOpen} onClose={handleCloseJoin} onJoin={handleJoinMeeting} />
 
       </Box>
     </ThemeProvider>
