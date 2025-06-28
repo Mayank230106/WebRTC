@@ -1,5 +1,5 @@
-import React from 'react';
-import { 
+import React, { useState } from 'react';
+import {
   AppBar,
   Toolbar,
   Typography,
@@ -14,14 +14,21 @@ import {
   ListItemText,
   Divider,
   Paper,
-  CssBaseline
+  CssBaseline,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  IconButton
 } from '@mui/material';
-import { 
+import {
   Videocam as VideocamIcon,
   Login as LoginIcon,
   Group as GroupIcon,
   Settings as SettingsIcon,
-  ArrowForward as ArrowForwardIcon
+  ArrowForward as ArrowForwardIcon,
+  Close as CloseIcon
 } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
@@ -63,7 +70,91 @@ const theme = createTheme({
   }
 });
 
+// JoinMeetingDialog component
+function JoinMeetingDialog({ open, onClose, onJoin }) {
+  const [code, setCode] = useState('');
+
+  const handleJoin = () => {
+    if (code.trim()) {
+      onJoin(code.trim());
+      setCode('');
+    }
+  };
+
+  const handleClose = () => {
+    setCode('');
+    onClose();
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      fullWidth
+      maxWidth="xs"
+      aria-labelledby="join-meeting-dialog"
+    >
+      <DialogTitle id="join-meeting-dialog" sx={{ pr: 4, position: 'relative' }}>
+        Enter Meeting Code
+        <IconButton
+          aria-label="close"
+          onClick={handleClose}
+          sx={{
+            position: 'absolute',
+            right: 8,
+            top: 8,
+            color: 'grey.500'
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+
+      <DialogContent dividers>
+        <Box component="form" noValidate autoComplete="off">
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Meeting Code"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={code}
+            onChange={e => setCode(e.target.value)}
+          />
+        </Box>
+      </DialogContent>
+
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button onClick={handleClose} variant="text">
+          Cancel
+        </Button>
+        <Button
+          onClick={handleJoin}
+          variant="contained"
+          color="secondary"
+          disabled={!code.trim()}
+        >
+          Join
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+// Home component with integrated dialog
 export const Home = () => {
+  const [joinOpen, setJoinOpen] = useState(false);
+
+  const handleOpenJoin = () => setJoinOpen(true);
+  const handleCloseJoin = () => setJoinOpen(false);
+  const handleJoinMeeting = (code) => {
+    // Replace with your actual join logic or navigation
+    console.log('Joining meeting with code:', code);
+    // e.g. navigate(`/join/${code}`)
+    setJoinOpen(false);
+  };
+
   const features = [
     { icon: <VideocamIcon fontSize="large" color="primary" />, title: 'HD Video Calls', description: 'Crystal clear video quality with noise cancellation' },
     { icon: <GroupIcon fontSize="large" color="primary" />, title: 'Group Meetings', description: 'Host meetings with up to 50 participants' },
@@ -132,7 +223,7 @@ export const Home = () => {
                     color="primary"
                     size="large"
                     component={Link}
-                    to="/meeting/new"
+                    to="/video" // ← updated path here
                     endIcon={<ArrowForwardIcon />}
                   >
                     Start New Meeting
@@ -141,9 +232,8 @@ export const Home = () => {
                     variant="outlined"
                     color="secondary"
                     size="large"
-                    component={Link}
-                    to="/join"
                     startIcon={<LoginIcon />}
+                    onClick={handleOpenJoin}
                   >
                     Join a Meeting
                   </Button>
@@ -256,6 +346,14 @@ export const Home = () => {
             </Typography>
           </Container>
         </Box>
+
+        {/* Join Meeting Dialog */}
+        <JoinMeetingDialog
+          open={joinOpen}
+          onClose={handleCloseJoin}
+          onJoin={handleJoinMeeting}
+        />
+
       </Box>
     </ThemeProvider>
   );

@@ -1,23 +1,21 @@
 import React from 'react';
-import { 
-  AppBar, 
-  Toolbar, 
-  Typography, 
-  Container, 
-  Box, 
-  createTheme, 
-  ThemeProvider,
-  IconButton
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Container,
+  Box,
+  IconButton,
+  CssBaseline,
+  createTheme,
+  ThemeProvider
 } from '@mui/material';
-import { VideoCall, MoreVert } from '@mui/icons-material';
+import { MoreVert } from '@mui/icons-material';
 
-// Minimal, professional theme
-const theme = createTheme({
+const darkTheme = createTheme({
   palette: {
     mode: 'dark',
-    primary: {
-      main: '#ffffff',
-    },
+    primary: { main: '#ffffff' },
     background: {
       default: '#000000',
       paper: '#111111',
@@ -46,25 +44,44 @@ const theme = createTheme({
         },
       },
     },
-  },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+          textTransform: 'none',
+          fontWeight: 600
+        }
+      }
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          borderRadius: 16
+        }
+      }
+    }
+  }
 });
 
 export default function Layout({ children, title = 'StreamConnect' }) {
   return (
-    <ThemeProvider theme={theme}>
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
+    <ThemeProvider theme={darkTheme}>
+      <CssBaseline />
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
           minHeight: '100vh',
-          backgroundColor: '#000000',
+          width: '100vw',
+          overflowX: 'hidden',
+          backgroundColor: 'background.default',
         }}
       >
-        {/* Minimal Header */}
+        {/* Header */}
         <AppBar position="static" elevation={0}>
-          <Toolbar 
+          <Toolbar
             variant="dense"
-            sx={{ 
+            sx={{
               minHeight: 60,
               px: { xs: 2, sm: 4 },
               justifyContent: 'space-between',
@@ -84,23 +101,18 @@ export default function Layout({ children, title = 'StreamConnect' }) {
                   },
                 }}
               />
-              <Typography 
-                variant="h6" 
+              <Typography
+                variant="h6"
                 component="div"
-                sx={{
-                  fontWeight: 500,
-                  color: '#ffffff',
-                  letterSpacing: '-0.01em',
-                }}
+                sx={{ fontWeight: 500, color: 'text.primary', letterSpacing: '-0.01em' }}
               >
                 {title}
               </Typography>
             </Box>
-            
-            <IconButton 
+            <IconButton
               size="small"
-              sx={{ 
-                color: '#888888',
+              sx={{
+                color: 'text.secondary',
                 '&:hover': {
                   backgroundColor: 'rgba(255, 255, 255, 0.05)',
                 },
@@ -112,24 +124,22 @@ export default function Layout({ children, title = 'StreamConnect' }) {
         </AppBar>
 
         {/* Main Content */}
-        <Container
+        <Box
           component="main"
-          maxWidth={false}
-          disableGutters
           sx={{
             flex: 1,
-            width: '100vw',
+            width: '100%',
             px: 0,
-            backgroundColor: '#000000',
+            backgroundColor: 'background.default',
           }}
         >
           {children}
-        </Container>
+        </Box>
 
-        {/* Minimal Footer */}
-        <Box 
-          component="footer" 
-          sx={{ 
+        {/* Footer */}
+        <Box
+          component="footer"
+          sx={{
             py: 2,
             px: { xs: 2, sm: 4 },
             borderTop: '1px solid rgba(255, 255, 255, 0.08)',
@@ -137,13 +147,9 @@ export default function Layout({ children, title = 'StreamConnect' }) {
             backdropFilter: 'blur(20px)',
           }}
         >
-          <Typography 
-            variant="caption" 
-            sx={{ 
-              color: '#666666',
-              fontSize: '0.75rem',
-              fontWeight: 400,
-            }}
+          <Typography
+            variant="caption"
+            sx={{ color: '#666666', fontSize: '0.75rem', fontWeight: 400 }}
           >
             © 2025 StreamConnect
           </Typography>

@@ -9,7 +9,6 @@ import {
   Link as MuiLink,
   Divider,
   Grid,
-  Slide,
   CssBaseline
 } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
@@ -98,11 +97,12 @@ export const Login = () => {
               alignItems: 'center',
               justifyContent: 'center',
               p: { xs: 2, sm: 4 },
-              backgroundColor: 'background.paper'
+              backgroundColor: 'background.paper',
+              position: 'relative',
+              overflow: 'hidden'
             }}
           >
-            {/* Sign In */}
-            <Slide direction="left" in={isLogin} mountOnEnter unmountOnExit>
+            {isLogin ? (
               <Paper elevation={0} sx={{ 
                 width: '100%', 
                 maxWidth: 400, 
@@ -159,10 +159,7 @@ export const Login = () => {
                   </Typography>
                 </Box>
               </Paper>
-            </Slide>
-
-            {/* Sign Up */}
-            <Slide direction="right" in={!isLogin} mountOnEnter unmountOnExit>
+            ) : (
               <Paper elevation={0} sx={{ 
                 width: '100%', 
                 maxWidth: 400, 
@@ -233,7 +230,7 @@ export const Login = () => {
                   </Typography>
                 </Box>
               </Paper>
-            </Slide>
+            )}
           </Grid>
         </Grid>
       </Box>
