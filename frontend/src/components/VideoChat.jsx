@@ -26,7 +26,6 @@ export default function VideoChat() {
   const [isLoading, setIsLoading] = useState(false);
   const [localStream, setLocalStream] = useState(null);
 
-  // --- Stream Handling ---
   const startStream = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -42,7 +41,6 @@ export default function VideoChat() {
     }
   };
 
-  // --- Peer Setup ---
   const setupPeer = (stream, offerObj = null) => {
     const pc = new RTCPeerConnection({
       iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
@@ -69,7 +67,6 @@ export default function VideoChat() {
     return pc;
   };
 
-  // --- Call Handlers ---
   const call = async () => {
     setIsLoading(true);
     try {
@@ -118,7 +115,6 @@ export default function VideoChat() {
     setOffers((prev) => prev.filter((_, i) => i !== offerIndex));
   };
 
-  // --- Toggle Audio/Video ---
   const toggleVideo = () => {
     const track = localStream?.getVideoTracks()[0];
     if (track) {
@@ -135,7 +131,7 @@ export default function VideoChat() {
     }
   };
 
-  // --- Socket Lifecycle ---
+
   useEffect(() => {
     socket.auth = { userName: userName.current, password: 'x' };
     socket.connect();
@@ -175,7 +171,6 @@ export default function VideoChat() {
     };
   }, []);
 
-  // --- Auto-start camera on mount ---
   useEffect(() => {
     const init = async () => {
       try {
