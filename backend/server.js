@@ -43,6 +43,24 @@ io.on("connection", socket => {
 
   socket.emit("availableOffers", offers);
 
+  socket.on("disconnect", () => {
+    const leavingUser = connectedSockets.find(s => s.socketId === socket.id)?.userName;
+
+    const offersBefore = offers.length;
+    for (let i = offers.length - 1; i >= 0; i--) {
+      if (offers[i].offererUserName === leavingUser || offers[i].answererUserName === leavingUser) {
+        offers.splice(i, 1);
+      }
+    }
+
+    io.emit("availableOffers", offers);
+
+    connectedSockets.splice(
+      connectedSockets.findIndex(s => s.socketId === socket.id),
+      1
+    );
+  });
+
 
   socket.on("newOffer", offer => {
     offers.push({
@@ -58,6 +76,27 @@ io.on("connection", socket => {
 
     io.emit("availableOffers", offers);
   });
+
+  socket.on("declineOffer", ({ offererUserName }) => {
+    const declinedOfferIndex = offers.findIndex(o => o.offererUserName === offererUserName);
+
+    if (declinedOfferIndex !== -1) {
+      const declinedOffer = offers[declinedOfferIndex];
+
+      
+      const offererSocket = connectedSockets.find(s => s.userName === offererUserName);
+      if (offererSocket) {
+        socket.to(offererSocket.socketId).emit("offerDeclined", {
+          by: userName,
+        });
+      }
+
+      offers.splice(declinedOfferIndex, 1);
+
+      io.emit("availableOffers", offers);
+    }
+  });
+
 
   socket.on("newAnswer", (offerObj, ack) => {
     const socketToAnswer = connectedSockets.find(s => s.userName === offerObj.offererUserName);
