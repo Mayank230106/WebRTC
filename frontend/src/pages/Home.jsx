@@ -32,7 +32,7 @@ import {
   Close as CloseIcon,
   Person as PersonIcon
 } from '@mui/icons-material';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 // Carousel library
@@ -40,7 +40,6 @@ import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 
-// Enhanced modern theme
 const theme = createTheme({
   palette: {
     primary: { main: '#00695c', contrastText: '#fff' },
@@ -116,12 +115,13 @@ function JoinMeetingDialog({ open, onClose, onJoin }) {
 
 export const Home = () => {
   const [joinOpen, setJoinOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleOpenJoin = () => setJoinOpen(true);
   const handleCloseJoin = () => setJoinOpen(false);
   const handleJoinMeeting = code => {
-    console.log('Joining meeting with code:', code);
-    // e.g. navigate(`/join/${code}`)
+    // Navigate to video page with join code as query param
+    navigate(`/video?join=${encodeURIComponent(code)}`);
     setJoinOpen(false);
   };
 
