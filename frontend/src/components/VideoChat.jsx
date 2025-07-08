@@ -112,6 +112,7 @@ export default function VideoChat() {
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
+      // Send offer as { offer, offererUserName }
       socket.emit('newOffer', {
         offer,
         offererUserName: userName.current,
@@ -126,37 +127,48 @@ export default function VideoChat() {
   };
 
   const answer = async (offerObj) => {
-  setIsLoading(true);
-  try {
-    const stream = localStream || await startStream();
+    setIsLoading(true);
+    try {
+      const stream = localStream || await startStream();
 
-    if (!localStream) {
-      setLocalStream(stream);
-      if (localRef.current) {
-        localRef.current.srcObject = stream;
+      if (!localStream) {
+        setLocalStream(stream);
+        if (localRef.current) {
+          localRef.current.srcObject = stream;
+        }
       }
+
+      const pc = setupPeer(offerObj);
+
+      await pc.setRemoteDescription(offerObj.offer);
+
+      const answerSDP = await pc.createAnswer();
+      await pc.setLocalDescription(answerSDP);
+
+      socket.emit(
+        'newAnswer',
+        {
+          answer: answerSDP,
+          answererUserName: userName.current,
+          offererUserName: offerObj.offererUserName,
+        },
+        (offererIceCandidates) => {
+          offererIceCandidates.forEach(candidate => {
+            if (candidate) {
+              pc.addIceCandidate(new RTCIceCandidate(candidate));
+            }
+          });
+        }
+      );
+
+
+      setIsInCall(true);
+    } catch (err) {
+      console.error('Answering error:', err);
+    } finally {
+      setIsLoading(false);
     }
-
-    const pc = setupPeer(offerObj);
-
-    await pc.setRemoteDescription(offerObj.offer);
-
-    const answerSDP = await pc.createAnswer();
-    await pc.setLocalDescription(answerSDP);
-
-    socket.emit('newAnswer', {
-      answer: answerSDP,
-      answererUserName: userName.current,
-      offererUserName: offerObj.offererUserName,
-    });
-
-    setIsInCall(true);
-  } catch (err) {
-    console.error('Answering error:', err);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
 
   const hangUp = () => {

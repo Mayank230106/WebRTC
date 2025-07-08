@@ -62,20 +62,22 @@ io.on("connection", socket => {
   });
 
 
-  socket.on("newOffer", offer => {
-    offers.push({
-      offererUserName: userName,
-      offer,
-      offerIceCandidates: [],
-      answererUserName: null,
-      answer: null,
-      answererIceCandidates: []
-    });
-    console.log("New offer received from", userName);
-    console.log("Broadcasting offers:", offers);
-
-    io.emit("availableOffers", offers);
+  socket.on("newOffer", ({ offer, offererUserName }) => {
+  offers.push({
+    offererUserName,
+    offer,
+    offerIceCandidates: [],
+    answererUserName: null,
+    answer: null,
+    answererIceCandidates: []
   });
+
+  console.log("New offer received from", offererUserName);
+  console.log("Broadcasting offers:", offers);
+
+  io.emit("availableOffers", offers);
+});
+
 
   socket.on("declineOffer", ({ offererUserName }) => {
     const declinedOfferIndex = offers.findIndex(o => o.offererUserName === offererUserName);
