@@ -9,8 +9,9 @@ import {
 import {
   VideoCall, Phone, Videocam, VideocamOff, Mic, MicOff, CallEnd, PhoneDisabled
 } from '@mui/icons-material';
-import { socket } from '../socket/socketClient.js';
+import { connectSocketWithAuth } from '../socket/socketClient.js';
 import Layout from './Layout.jsx';
+import { useLocation } from 'react-router-dom';
 
 export default function VideoChat() {
   const localRef = useRef(null);
@@ -25,6 +26,8 @@ export default function VideoChat() {
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [localStream, setLocalStream] = useState(null);
+  const [socketReady, setSocketReady] = useState(false);
+  const location = useLocation();
 
   // --- Stream Handling ---
   const startStream = async () => {
@@ -77,7 +80,12 @@ export default function VideoChat() {
       const pc = setupPeer(stream);
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
-      socket.emit('newOffer', offer);
+      // Always send offererUserName for signaling
+      socket.emit('newOffer', {
+        offer,
+        offererUserName: userName.current,
+      });
+      setIsInCall(true);
     } catch (err) {
       console.error('Call initiation error:', err);
     } finally {
@@ -137,8 +145,23 @@ export default function VideoChat() {
 
   // --- Socket Lifecycle ---
   useEffect(() => {
-    socket.auth = { userName: userName.current, password: 'x' };
-    socket.connect();
+    connectSocketWithAuth({ userName: userName.current, password: 'x' });
+
+    const handleConnect = () => {
+      setIsConnected(true);
+      setSocketReady(true);
+      console.log("Socket connected");
+    };
+    const handleDisconnect = () => {
+      setIsConnected(false);
+      setSocketReady(false);
+      console.log("Socket disconnected");
+    };
+
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+    socket.on('availableOffers', setOffers);
+    socket.on('newOfferAwaiting', setOffers);
 
     const handleAnswer = async (offerObj) => {
       try {
@@ -157,16 +180,12 @@ export default function VideoChat() {
       }
     };
 
-    socket.on('connect', () => setIsConnected(true));
-    socket.on('disconnect', () => setIsConnected(false));
-    socket.on('availableOffers', setOffers);
-    socket.on('newOfferAwaiting', setOffers);
     socket.on('answerResponse', handleAnswer);
     socket.on('receivedIceCandidateFromServer', handleCandidate);
 
     return () => {
-      socket.off('connect');
-      socket.off('disconnect');
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
       socket.off('availableOffers');
       socket.off('newOfferAwaiting');
       socket.off('answerResponse', handleAnswer);
@@ -188,6 +207,41 @@ export default function VideoChat() {
       localStream?.getTracks().forEach((track) => track.stop());
     };
   }, []);
+
+  // --- Join by code logic ---
+  useEffect(() => {
+    // If there's a ?join=User-XXXXX in the URL, try to join that user's call
+    const params = new URLSearchParams(location.search);
+    const joinCode = params.get('join');
+    if (joinCode && joinCode !== userName.current) {
+      // Wait for offers to be loaded, then try to answer
+      const tryJoin = (offersList) => {
+        const offer = offersList.find(
+          (o) => o.offererUserName === joinCode && !o.answer
+        );
+        if (offer) {
+          answer(offer);
+        }
+      };
+      if (offers.length > 0) {
+        tryJoin(offers);
+      }
+      const unsub = socket.on('availableOffers', (offersList) => {
+        tryJoin(offersList);
+      });
+      return () => {
+        if (unsub) socket.off('availableOffers', unsub);
+      };
+    }
+    // eslint-disable-next-line
+  }, [location.search, offers]);
+
+  // --- Incoming Offers: only show those not from self and not answered ---
+  const incomingOffers = offers.filter(
+    (offer) =>
+      offer.offererUserName !== userName.current &&
+      !offer.answer
+  );
 
   // --- Render ---
   return (
@@ -244,7 +298,6 @@ export default function VideoChat() {
             </Typography>
           </Box>
         </Box>
-
         {/* Call Controls */}
         <Box sx={{
           position: 'absolute', bottom: 30, left: '50%',
@@ -257,7 +310,7 @@ export default function VideoChat() {
               variant="contained"
               startIcon={<VideoCall />}
               onClick={call}
-              disabled={!isConnected || isLoading}
+              disabled={!socketReady || isLoading}
               sx={{
                 backgroundColor: '#fff', color: '#000',
                 px: 3, py: 1, borderRadius: 2, fontWeight: 500,
@@ -292,7 +345,7 @@ export default function VideoChat() {
         </Box>
 
         {/* Incoming Offers */}
-        {offers.length > 0 && (
+        {incomingOffers.length > 0 && !isInCall && (
           <Fade in>
             <Box sx={{
               position: 'absolute', top: '50%', left: '50%',
@@ -305,7 +358,7 @@ export default function VideoChat() {
                 Incoming Call
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-                {offers.map((offer, index) => (
+                {incomingOffers.map((offer, index) => (
                   <React.Fragment key={index}>
                     <Button
                       variant="contained"
@@ -336,7 +389,7 @@ export default function VideoChat() {
                 ))}
               </Box>
               <Typography variant="caption" sx={{ color: '#888', mt: 2 }}>
-                from {offers[0]?.offererUserName}
+                from {incomingOffers[0]?.offererUserName}
               </Typography>
             </Box>
           </Fade>
